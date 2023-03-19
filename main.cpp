@@ -9,7 +9,7 @@ using namespace std;
 
 class WordDictionary {
   struct Node {
-    unordered_map<char, Node*> children;
+    array<unique_ptr<Node>, 26> children;
     bool is_word = false;
   };
 
@@ -19,15 +19,19 @@ class WordDictionary {
     for (int i = pos; i < word.size(); ++i) {
       char c = word[i];
       if ('.' == c) {
-        for (const auto&[letter, child]: node->children) {
-          if (search(word, i + 1, child)) return true;
+        for (int l = 0; l < 26; ++l) {
+          Node* child = node->children[l].get();
+          if (child) {
+            if (search(word, i + 1, child)) return true;
+          }
         }
         return false;
       } else {
-        if (!node->children.count(c)) {
+        int l = c - 'a';
+        if (!node->children[l]) {
           return false;
         } else {
-          node = node->children.at(c);
+          node = node->children[l].get();
         }
       }
     }
@@ -36,19 +40,18 @@ class WordDictionary {
   }
 
  public:
-  WordDictionary() = default;
+  WordDictionary() {}
 
   void addWord(string word) {
     if (!word.empty()) {
       Node* node = &root;
       for (int i = 0; i < word.size(); ++i) {
-        char c = word[i];
-        if (node->children.count(c)) {
-          node = node->children.at(c);
+        int c = word[i] - 'a';
+        if (node->children[c]) {
+          node = node->children[c].get();
         } else {
-          Node* child = new Node;
-          node->children[c] = child;
-          node = child;
+          node->children[c] = make_unique<Node>();
+          node = node->children[c].get();
         }
       }
       node->is_word = true;
