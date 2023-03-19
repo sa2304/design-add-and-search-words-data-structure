@@ -8,18 +8,55 @@
 using namespace std;
 
 class WordDictionary {
- public:
-  WordDictionary() {
-    //FIXME
+  struct Node {
+    unordered_map<char, Node*> children;
+    bool is_word = false;
+  };
+
+  Node root;
+
+  bool search(const string& word, int pos, Node* node) {
+    for (int i = pos; i < word.size(); ++i) {
+      char c = word[i];
+      if ('.' == c) {
+        for (const auto&[letter, child]: node->children) {
+          if (search(word, i + 1, child)) return true;
+        }
+        return false;
+      } else {
+        if (!node->children.count(c)) {
+          return false;
+        } else {
+          node = node->children.at(c);
+        }
+      }
+    }
+
+    return node->is_word;
   }
 
+ public:
+  WordDictionary() = default;
+
   void addWord(string word) {
-    //FIXME
+    if (!word.empty()) {
+      Node* node = &root;
+      for (int i = 0; i < word.size(); ++i) {
+        char c = word[i];
+        if (node->children.count(c)) {
+          node = node->children.at(c);
+        } else {
+          Node* child = new Node;
+          node->children[c] = child;
+          node = child;
+        }
+      }
+      node->is_word = true;
+    }
   }
 
   bool search(string word) {
-    //FIXME
-    return false;
+    return search(word, 0, &root);
   }
 };
 
